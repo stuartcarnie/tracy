@@ -56,7 +56,7 @@ void View::DrawMessages()
         if( size.x >= 0 ) size.x = ImMax( ImGui::CalcTextSize( label, nullptr, true ).x + 2.0f * style.FramePadding.x, frameheight );
 
         // Toggle when button is pressed
-        if( ImGui::ButtonEx( label, size, ImGuiButtonFlags_AlignTextBaseLine ) ) 
+        if( ImGui::ButtonEx( label, size, ImGuiButtonFlags_AlignTextBaseLine ) )
         {
             value = !value;
             filterChanged = true;
@@ -72,7 +72,7 @@ void View::DrawMessages()
                 filterChanged = true;
             }
         }
-        
+
         if( disabled )
         {
             ImGui::PopStyleColor();
@@ -238,7 +238,7 @@ void View::DrawMessages()
     {
         bool showCallstack = m_messagesShowCallstack;
         m_msgList.reserve( msgs.size() );
-        
+
         bool isThreadVisible = true;
         uint16_t previousThread = msgs[m_prevMessages]->thread + 1; // Value different from first entry since + 1
 

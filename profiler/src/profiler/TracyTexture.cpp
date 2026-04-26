@@ -19,6 +19,18 @@ namespace tracy
 
 static bool s_hardwareS3tc;
 
+static tracy_force_inline GLuint CreateTextureObject( bool mipmapped, bool wrapRepeat )
+{
+    GLuint tex;
+    glGenTextures( 1, &tex );
+    glBindTexture( GL_TEXTURE_2D, tex );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmapped ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+    return tex;
+}
+
 void InitTexture()
 {
 #ifdef __EMSCRIPTEN__
@@ -37,18 +49,6 @@ void InitTexture()
         }
     }
 #endif
-}
-
-ImTextureID MakeTexture( bool zigzag )
-{
-    GLuint tex;
-    glGenTextures( 1, &tex );
-    glBindTexture( GL_TEXTURE_2D, tex );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, zigzag ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, zigzag ? GL_REPEAT : GL_CLAMP_TO_EDGE );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-    return tex;
 }
 
 void FreeTexture( ImTextureID _tex, void(*runOnMainThread)(const std::function<void()>&, bool) )
@@ -139,10 +139,17 @@ static tracy_force_inline void DecodeDxt1Part( uint64_t d, uint32_t* dst, uint32
     memcpy( dst+3, dict + (idx & 0x3), 4 );
 }
 
-void UpdateTexture( ImTextureID _tex, const char* data, int w, int h )
+ImTextureID UpdateTexture( ImTextureID _tex, const char* data, int w, int h )
 {
     auto tex = (GLuint)_tex;
-    glBindTexture( GL_TEXTURE_2D, tex );
+    if( tex == 0 )
+    {
+        tex = CreateTextureObject( false, false );
+    }
+    else
+    {
+        glBindTexture( GL_TEXTURE_2D, tex );
+    }
     if( s_hardwareS3tc )
     {
         glCompressedTexImage2D( GL_TEXTURE_2D, 0, COMPRESSED_RGB_S3TC_DXT1_EXT, w, h, 0, w * h / 2, data );
@@ -165,23 +172,40 @@ void UpdateTexture( ImTextureID _tex, const char* data, int w, int h )
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp );
         delete[] tmp;
     }
+    return (ImTextureID)tex;
 }
 
-void UpdateTextureRGBA( ImTextureID _tex, void* data, int w, int h )
+ImTextureID UpdateTextureRGBA( ImTextureID _tex, void* data, int w, int h )
 {
     auto tex = (GLuint)_tex;
-    glBindTexture( GL_TEXTURE_2D, tex );
+    if( tex == 0 )
+    {
+        tex = CreateTextureObject( false, false );
+    }
+    else
+    {
+        glBindTexture( GL_TEXTURE_2D, tex );
+    }
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+    return (ImTextureID)tex;
 }
 
-void UpdateTextureRGBAMips( ImTextureID _tex, void** data, int* w, int* h, size_t mips )
+ImTextureID UpdateTextureRGBAMips( ImTextureID _tex, void** data, int* w, int* h, size_t mips )
 {
     auto tex = (GLuint)_tex;
-    glBindTexture( GL_TEXTURE_2D, tex );
+    if( tex == 0 )
+    {
+        tex = CreateTextureObject( true, true );
+    }
+    else
+    {
+        glBindTexture( GL_TEXTURE_2D, tex );
+    }
     for( size_t i=0; i<mips; i++ )
     {
         glTexImage2D( GL_TEXTURE_2D, i, GL_RGBA, w[i], h[i], 0, GL_RGBA, GL_UNSIGNED_BYTE, data[i] );
     }
+    return (ImTextureID)tex;
 }
 
 }

@@ -92,7 +92,7 @@ bool View::DrawConnection()
             ImGui::Text( "%6.1f", fps );
             ImGui::SameLine();
             TextFocused( "Frame time:", TimeToString( dt ) );
-        }        
+        }
         const auto& fis = m_worker.GetFrameImages();
         // Keep a copy here since the worker may modify the frame images vector while we do not own the lock
         if( !fis.empty() ) lastFrameImage = *fis.back();

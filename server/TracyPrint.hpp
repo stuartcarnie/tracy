@@ -16,7 +16,7 @@
 #  define NO_CHARCONV
 #endif
 
-#ifdef __GNUC__
+#if defined __GNUC__ && !(defined __clang__ && __clang_major__ >= 21)
 #  define NO_CHARCONV
 #endif
 

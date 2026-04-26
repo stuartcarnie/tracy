@@ -1370,8 +1370,7 @@ void View::DrawFrameImage( FrameImageCache& cache, const FrameImage& fi, float s
 {
     if ( fi.ptr != cache.dataPtr )
     {
-        if( !cache.textureId ) cache.textureId = MakeTexture();
-        UpdateTexture( cache.textureId, m_worker.UnpackFrameImage( fi ), fi.w, fi.h );
+        cache.textureId = UpdateTexture( cache.textureId, m_worker.UnpackFrameImage( fi ), fi.w, fi.h );
         cache.dataPtr = fi.ptr;
     }
     if( fi.flip )

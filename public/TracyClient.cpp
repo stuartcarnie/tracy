@@ -21,10 +21,18 @@
 
 #include "common/tracy_lz4.cpp"
 #include "client/TracyProfiler.cpp"
-#include "client/TracyCallstack.cpp"
+#if defined __APPLE__
+#  include "client/TracyCallstack_darwin.mm"
+#else
+#  include "client/TracyCallstack.cpp"
+#endif
 #include "client/TracySysPower.cpp"
 #include "client/TracySysTime.cpp"
-#include "client/TracySysTrace.cpp"
+#if defined __APPLE__
+#  include "client/TracySysTrace_darwin.cpp"
+#else
+#  include "client/TracySysTrace.cpp"
+#endif
 #include "common/TracySocket.cpp"
 #include "client/tracy_rpmalloc.cpp"
 #include "client/TracyDxt1.cpp"

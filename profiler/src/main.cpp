@@ -151,11 +151,13 @@ static void RunOnMainThread( const std::function<void()>& cb, bool forceDelay = 
 
 static void ScaleWindow(ImGuiWindow* window, float scale)
 {
-    ImVec2 origin = window->Viewport->Pos;
-    window->Pos = ImFloor((window->Pos - origin) * scale + origin);
-    window->Size = ImTrunc(window->Size * scale);
-    window->SizeFull = ImTrunc(window->SizeFull * scale);
-    window->ContentSize = ImTrunc(window->ContentSize * scale);
+    if (window->Viewport) {
+        ImVec2 origin = window->Viewport->Pos;
+        window->Pos = ImFloor((window->Pos - origin) * scale + origin);
+        window->Size = ImTrunc(window->Size * scale);
+        window->SizeFull = ImTrunc(window->SizeFull * scale);
+        window->ContentSize = ImTrunc(window->ContentSize * scale);
+    }
 }
 
 static void SetupDPIScale()
@@ -189,7 +191,7 @@ static void SetupDPIScale()
     iconTexSz = ty;
     auto scaleIcon = new uint8_t[4*ty*ty];
     stbir_resize_uint8( iconPx, iconX, iconY, 0, scaleIcon, ty, ty, 0, 4 );
-    tracy::UpdateTextureRGBA( iconTex, scaleIcon, ty, ty );
+    iconTex = tracy::UpdateTextureRGBA( iconTex, scaleIcon, ty, ty );
     delete[] scaleIcon;
 
     const auto ratio = scale / prevScale;
@@ -326,8 +328,6 @@ int main( int argc, char** argv )
     ImGuiTracyContext imguiContext;
     Backend backend( title, DrawContents, ScaleChanged, IsBusy, &mainThreadTasks );
     tracy::InitTexture();
-    iconTex = tracy::MakeTexture();
-    zigzagTex = tracy::MakeTexture( true );
     iconThread.join();
     backend.SetIcon( iconPx, iconX, iconY );
     bptr = &backend;
@@ -346,7 +346,7 @@ int main( int argc, char** argv )
 
     s_achievements->Achieve( "achievementsIntro" );
 
-    tracy::UpdateTextureRGBAMips( zigzagTex, (void**)zigzagPx, zigzagX, zigzagY, 6 );
+    zigzagTex = tracy::UpdateTextureRGBAMips( zigzagTex, (void**)zigzagPx, zigzagX, zigzagY, 6 );
     for( auto& v : zigzagPx ) free( v );
 
     if( initFileOpen )

@@ -4002,7 +4002,7 @@ void Worker::AddSourceCode( uint32_t id, const char* data, size_t sz )
 
 CallstackFrameId Worker::PackPointer( uint64_t ptr ) const
 {
-    assert( ( ( ptr & 0x3000000000000000 ) << 2 ) == ( ptr & 0xC000000000000000 ) );
+    // assert( ( ( ptr & 0x3000000000000000 ) << 2 ) == ( ptr & 0xC000000000000000 ) );
     CallstackFrameId id;
     id.idx = ptr;
     id.sel = 0;

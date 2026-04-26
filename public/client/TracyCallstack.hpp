@@ -33,7 +33,12 @@ static tracy_force_inline void* Callstack( int32_t /*depth*/ ) { return nullptr;
 #if TRACY_HAS_CALLSTACK == 2 || TRACY_HAS_CALLSTACK == 5
 #  include <unwind.h>
 #elif TRACY_HAS_CALLSTACK >= 3
-#  ifdef TRACY_LIBUNWIND_BACKTRACE
+#  if defined(__APPLE__)
+namespace tracy
+{
+int CaptureCurrentThreadBacktrace( void** addresses, int max_depth );
+}
+#  elif defined(TRACY_LIBUNWIND_BACKTRACE)
      // libunwind is, in general, significantly faster than execinfo based backtraces
 #    define UNW_LOCAL_ONLY
 #    include <libunwind.h>
@@ -154,7 +159,9 @@ static tracy_force_inline void* Callstack( int32_t depth )
 
     auto trace = (uintptr_t*)tracy_malloc( ( 1 + (size_t)depth ) * sizeof( uintptr_t ) );
 
-#ifdef TRACY_LIBUNWIND_BACKTRACE
+#if defined(__APPLE__)
+    size_t num = tracy::CaptureCurrentThreadBacktrace( (void**)(trace+1), depth );
+#elif defined(TRACY_LIBUNWIND_BACKTRACE)
     size_t num =  unw_backtrace( (void**)(trace+1), depth );
 #else
     const auto num = (size_t)backtrace( (void**)(trace+1), depth );

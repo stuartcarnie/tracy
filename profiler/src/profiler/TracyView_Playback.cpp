@@ -47,14 +47,10 @@ void View::DrawPlayback()
 
     const auto tstart = m_worker.GetFrameBegin( *frameSet, fi->frameRef );
 
-    if( !m_playback.texture )
-    {
-        m_playback.texture = MakeTexture();
-    }
     if( m_playback.currFrame != m_playback.frame )
     {
         m_playback.currFrame = m_playback.frame;
-        UpdateTexture( m_playback.texture, m_worker.UnpackFrameImage( *fi ), fi->w, fi->h );
+        m_playback.texture = UpdateTexture( m_playback.texture, m_worker.UnpackFrameImage( *fi ), fi->w, fi->h );
 
         if( m_playback.sync )
         {
