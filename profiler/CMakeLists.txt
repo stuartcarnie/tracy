@@ -7,6 +7,7 @@ set_option(GTK_FILESELECTOR "Use the GTK file selector on Linux instead of the x
 set_option(LEGACY "Instead of Wayland, use the legacy X11 backend on Linux" OFF)
 set_option(SELF_PROFILE "Enable self-profiling" OFF)
 set_option_value(SANITIZE "Sanitizer parameters" "")
+option(USE_METAL "Use Metal backend on macOS instead of OpenGL" OFF)
 
 if(APPLE)
     set_option(BUNDLE "Build a macOS application bundle" OFF)
@@ -21,7 +22,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(
     tracy-profiler
-    LANGUAGES C CXX
+    LANGUAGES C CXX OBJC OBJCXX
     VERSION ${TRACY_VERSION_STRING}
 )
 
@@ -101,7 +102,7 @@ set(SERVER_FILES
     TracySourceTokenizer.cpp
     TracySourceView.cpp
     TracyStorage.cpp
-    TracyTexture.cpp
+    $<IF:$<BOOL:${USE_METAL}>,TracyTexture_metal.mm,TracyTexture.cpp>
     TracyTimelineController.cpp
     TracyTimelineItem.cpp
     TracyTimelineItemCpuData.cpp
@@ -290,6 +291,22 @@ elseif(EMSCRIPTEN)
     set(PROFILER_FILES ${PROFILER_FILES}
         src/BackendEmscripten.cpp
     )
+elseif(USE_METAL)
+    set(PROFILER_FILES ${PROFILER_FILES}
+            src/BackendAppKit.mm
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_metal.mm
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_osx.mm
+    )
+
+    link_libraries(
+        $<LINK_LIBRARY:FRAMEWORK,Cocoa.framework>
+        $<LINK_LIBRARY:FRAMEWORK,GameController.framework>
+        $<LINK_LIBRARY:FRAMEWORK,QuartzCore.framework>
+        $<LINK_LIBRARY:FRAMEWORK,Metal.framework>
+        $<LINK_LIBRARY:FRAMEWORK,MetalKit.framework>
+    )
+
+    add_compile_options(-fobjc-arc)
 else()
     set(PROFILER_FILES ${PROFILER_FILES}
         src/BackendGlfw.cpp

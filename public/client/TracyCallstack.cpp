@@ -15,6 +15,10 @@
 
 #ifdef TRACY_HAS_CALLSTACK
 
+#if TRACY_HAS_CALLSTACK == 4
+#  include "apple/TracyCallstack.cpp"
+#else
+
 #if TRACY_HAS_CALLSTACK == 1
 #  ifndef NOMINMAX
 #    define NOMINMAX
@@ -2176,5 +2180,7 @@ CallstackEntryData DecodeCallstackPtr( uint64_t ptr )
 #endif
 
 }
+
+#endif
 
 #endif

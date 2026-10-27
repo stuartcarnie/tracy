@@ -143,8 +143,15 @@ bool Socket::Connect( const char* addr, uint16_t port )
                 return false;
             }
 #else
-            const auto err = errno;
+            auto err = errno;
             if( err == EALREADY || err == EINPROGRESS ) return false;
+            if( err == EISCONN )
+            {
+                // Some platforms (e.g. macOS) report EISCONN for a refused connection; check the pending error
+                socklen_t len = sizeof( err );
+                if( getsockopt( m_connSock, SOL_SOCKET, SO_ERROR, &err, &len ) != 0 ) err = errno;
+                else if( err == 0 ) err = EISCONN;
+            }
             if( err != EISCONN )
             {
                 freeaddrinfo( m_res );

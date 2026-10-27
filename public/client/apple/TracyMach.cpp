@@ -98,7 +98,7 @@ static void SysTraceSampleThread( mach_port_t tid )
     uint64_t frames [MaxDepth];
 
 #if defined(__aarch64__)
-    const int depth = SysTraceBacktrace( frames, MaxDepth, state.__pc, state.__fp );
+    const int depth = SysTraceBacktrace( frames, MaxDepth, arm_thread_state64_get_pc( state ), arm_thread_state64_get_fp( state ) );
 #elif defined(__x86_64__)
     const int depth = SysTraceBacktrace( frames, MaxDepth, state.__rip, state.__rbp );
 #endif
@@ -209,11 +209,12 @@ void SysTraceWorker( void* )
 
 bool SysTraceStart( int64_t& samplingPeriod )
 {
-    // check for elevated privileges
-    // (technically, since this is a software-based user-mode sampling, elevated
-    // privileges are unnecessary, but doing so keeps the behavior consistent with
-    // the system tracing in other platforms)
-    if( geteuid() != 0 ) return false;
+#ifdef TRACY_NO_SAMPLING
+    return false;
+#else
+    const char* noSamplingEnv = GetEnvVar( "TRACY_NO_SAMPLING" );
+    if( noSamplingEnv && noSamplingEnv[0] == '1' ) return false;
+#endif
 
     auto& systrace = SysTraceApple::Get();
 
